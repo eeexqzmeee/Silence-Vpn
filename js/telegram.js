@@ -1,3 +1,4 @@
+// Интеграция с Telegram Web App
 class TelegramIntegration {
     constructor() {
         this.tg = window.Telegram.WebApp;
@@ -5,53 +6,129 @@ class TelegramIntegration {
     }
 
     init() {
-        // Инициализация Telegram Web App
+        // Базовая инициализация - только поддерживаемые функции
         this.tg.expand();
-        this.tg.enableClosingConfirmation();
+        this.tg.ready();
         
-        // Установка цветовой схемы для темной темы
-        this.tg.setHeaderColor('#8243D6');
-        this.tg.setBackgroundColor('#0f0f0f');
+        // Применяем тему Telegram
+        this.applyTelegramTheme();
         
-        // Принудительно устанавливаем темную тему
-        this.tg.setParams({
-            theme: 'dark',
-            theme_params: {
-                bg_color: '#0f0f0f',
-                text_color: '#ffffff',
-                hint_color: '#b0b0b0',
-                link_color: '#8243D6',
-                button_color: '#8243D6',
-                button_text_color: '#ffffff'
-            }
+        console.log('Telegram Web App initialized:', {
+            version: this.tg.version,
+            platform: this.tg.platform,
+            themeParams: this.tg.themeParams
         });
+    }
+
+    applyTelegramTheme() {
+        // Используем тему Telegram из themeParams
+        if (this.tg.themeParams) {
+            this.applyTheme(this.tg.themeParams);
+        }
         
-        this.bindTelegramEvents();
+        // Слушаем изменения темы
+        this.tg.onEvent('themeChanged', (themeParams) => {
+            this.applyTheme(themeParams);
+        });
     }
 
-    bindTelegramEvents() {
-        // Обработка событий Telegram
-        this.tg.onEvent('viewportChanged', this.handleViewportChange);
+    applyTheme(themeParams) {
+        const style = document.documentElement.style;
+        
+        // Применяем цвета из темы Telegram
+        if (themeParams.bg_color) {
+            style.setProperty('--background', themeParams.bg_color);
+            document.body.style.backgroundColor = themeParams.bg_color;
+        }
+        
+        if (themeParams.text_color) {
+            style.setProperty('--text', themeParams.text_color);
+        }
+        
+        if (themeParams.hint_color) {
+            style.setProperty('--text-light', themeParams.hint_color);
+        }
+        
+        if (themeParams.button_color) {
+            style.setProperty('--primary', themeParams.button_color);
+            style.setProperty('--primary-light', this.lightenColor(themeParams.button_color, 20));
+            style.setProperty('--primary-dark', this.darkenColor(themeParams.button_color, 20));
+        }
+        
+        if (themeParams.button_text_color) {
+            // Обновляем цвет текста кнопок
+            document.querySelectorAll('.btn-primary, .subscribe-btn').forEach(btn => {
+                btn.style.color = themeParams.button_text_color;
+            });
+        }
+        
+        if (themeParams.secondary_bg_color) {
+            style.setProperty('--card-bg', themeParams.secondary_bg_color);
+        }
     }
 
-    handleViewportChange(event) {
-        console.log('Viewport changed:', event);
+    // Вспомогательные функции для работы с цветами
+    lightenColor(color, percent) {
+        // Упрощенная функция для осветления цвета
+        return color; // В реальном приложении можно добавить логику осветления
     }
 
-    // Методы для работы с Telegram API
+    darkenColor(color, percent) {
+        // Упрощенная функция для затемнения цвета
+        return color; // В реальном приложении можно добавить логику затемнения
+    }
+
+    // Безопасные методы для работы с Telegram API
     showAlert(message) {
-        this.tg.showAlert(message);
+        try {
+            this.tg.showAlert(message);
+        } catch (e) {
+            alert(message); // Fallback
+        }
     }
 
     showConfirm(message, callback) {
-        this.tg.showConfirm(message, callback);
+        try {
+            this.tg.showConfirm(message, callback);
+        } catch (e) {
+            if (confirm(message)) {
+                callback(true);
+            }
+        }
     }
 
     // Закрытие приложения
     closeApp() {
-        this.tg.close();
+        try {
+            this.tg.close();
+        } catch (e) {
+            console.log('Close app requested');
+        }
+    }
+
+    // Получение данных пользователя
+    getUserData() {
+        return this.tg.initDataUnsafe?.user || null;
+    }
+
+    // Проверка темной темы
+    isDarkTheme() {
+        return this.tg.colorScheme === 'dark';
     }
 }
 
-// Инициализация Telegram интеграции
-const telegramApp = new TelegramIntegration();
+// Безопасная инициализация
+let telegramApp;
+
+try {
+    telegramApp = new TelegramIntegration();
+} catch (error) {
+    console.log('Telegram Web App not available, using fallback mode');
+    telegramApp = {
+        showAlert: (msg) => alert(msg),
+        showConfirm: (msg, cb) => { if (confirm(msg)) cb(true); },
+        closeApp: () => console.log('Close app'),
+        getUserData: () => null,
+        isDarkTheme: () => true
+    };
+}

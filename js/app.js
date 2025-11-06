@@ -4,31 +4,41 @@ class SilenceProxyApp {
     }
 
     init() {
+        this.setupFallbackStyles();
         this.renderHeader();
         this.renderSubscription();
         this.renderActions();
         this.renderAdvantages();
         this.bindEvents();
+        this.addScrollEffects();
+    }
+
+    setupFallbackStyles() {
+        // Убедимся, что переменные CSS установлены даже если Telegram API не работает
+        const root = document.documentElement;
+        const computedStyle = getComputedStyle(root);
+        
+        // Проверяем, установлены ли наши переменные
+        if (!computedStyle.getPropertyValue('--primary').trim()) {
+            root.style.setProperty('--primary', '#6A4CDF');
+            root.style.setProperty('--primary-light', '#7D5FE8');
+            root.style.setProperty('--primary-dark', '#5A3FC8');
+            root.style.setProperty('--background', '#0A0A12');
+            root.style.setProperty('--text', '#ffffff');
+            root.style.setProperty('--text-light', '#B0B0C0');
+        }
     }
 
     renderHeader() {
         const header = document.getElementById('header');
-        const subscriptionData = this.getSubscriptionData();
-        
         header.innerHTML = `
             <div class="logo">
                 <div class="logo-icon">SP</div>
                 <div class="logo-text">Silence Proxy</div>
             </div>
-            <div class="profile-section">
-                ${subscriptionData.hasActiveSubscription ? 
-                    '<button class="subscribe-btn" id="renew-header-btn">Продлить</button>' : 
-                    '<button class="subscribe-btn" id="subscribe-header-btn">Подключить</button>'
-                }
-                <button class="profile-btn" id="profile-btn" title="Профиль">
-                    👤
-                </button>
-            </div>
+            <button class="profile-btn" id="profile-btn" title="Профиль">
+                👤
+            </button>
         `;
     }
 
@@ -49,29 +59,19 @@ class SilenceProxyApp {
                 <div class="status-icon active">🔒</div>
                 <div class="status-info">
                     <div class="status-title">Премиум подписка</div>
-                    <div class="status-subtitle">Активна до ${data.expiresAt}</div>
+                    <div class="status-subtitle">Active</div>
                 </div>
                 <div class="status-badge active">Active</div>
             </div>
             
             <div class="subscription-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Устройства</div>
-                    <div class="stat-value">${data.devicesUsed}/${data.maxDevices}</div>
+                    <div class="stat-label">Истекает</div>
+                    <div class="stat-value">${data.expiresAt}</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Трафик</div>
-                    <div class="stat-value">${data.usedTraffic}</div>
-                </div>
-            </div>
-            
-            <div class="traffic-progress">
-                <div class="traffic-info">
-                    <div class="traffic-label">Использовано</div>
-                    <div class="traffic-value">${data.trafficPercentage}%</div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${data.trafficPercentage}%"></div>
+                    <div class="stat-label">Устройства</div>
+                    <div class="stat-value">${data.devicesUsed}/${data.maxDevices}</div>
                 </div>
             </div>
         `;
@@ -88,14 +88,17 @@ class SilenceProxyApp {
     }
 
     renderActions() {
-        const section = document.getElementById('actions-section');
-        section.innerHTML = `
-            <div class="actions-grid">
-                <button class="action-btn" id="vpn-setup-btn">
-                    <div class="action-icon">⚙️</div>
+    const section = document.getElementById('actions-section');
+    const subscriptionData = this.getSubscriptionData();
+    
+    section.innerHTML = `
+        <div class="actions-grid">
+            <div class="main-actions">
+                <button class="action-btn" id="subscribe-btn">
+                    <div class="action-icon">💎</div>
                     <div class="action-content">
-                        <div class="action-text">Настройка VPN</div>
-                        <div class="action-description">Инструкция по подключению в приложении Happ</div>
+                        <div class="action-text">${subscriptionData.hasActiveSubscription ? 'Продлить подписку' : 'Подключить подписку'}</div>
+                        <div class="action-description">${subscriptionData.hasActiveSubscription ? 'Продлите доступ к премиум функциям' : 'Получите доступ ко всем функциям VPN'}</div>
                     </div>
                 </button>
                 
@@ -106,60 +109,91 @@ class SilenceProxyApp {
                         <div class="action-description">Добавление и удаление устройств</div>
                     </div>
                 </button>
+            </div>
+            
+            <div class="secondary-actions">
+                <button class="action-btn" id="vpn-setup-btn">
+                    <div class="action-icon">⚙️</div>
+                    <div class="action-content">
+                        <div class="action-text">Настройка</div>
+                        <div class="action-description">Инструкция для приложения Happ</div>
+                    </div>
+                </button>
                 
                 <button class="action-btn" id="support-btn">
                     <div class="action-icon">💬</div>
                     <div class="action-content">
                         <div class="action-text">Поддержка</div>
-                        <div class="action-description">FAQ и обращение в службу поддержки</div>
+                        <div class="action-description">FAQ и помощь</div>
                     </div>
                 </button>
             </div>
-        `;
-    }
+        </div>
+    `;
+}
 
     renderAdvantages() {
         const section = document.getElementById('advantages-section');
         section.innerHTML = `
-            <h3 class="section-title">Наши преимущества</h3>
-            <div class="advantages-grid">
-                <div class="advantage-card">
-                    <div class="advantage-icon">🚀</div>
-                    <div class="advantage-content">
-                        <div class="advantage-title">Высокая скорость</div>
-                        <div class="advantage-description">Без ограничений для комфортного серфинга</div>
-                    </div>
-                </div>
-                
-                <div class="advantage-card">
-                    <div class="advantage-icon">🛡️</div>
-                    <div class="advantage-content">
-                        <div class="advantage-title">Конфиденциальность</div>
-                        <div class="advantage-description">Ваши данные под надежной защитой</div>
-                    </div>
-                </div>
-                
-                <div class="advantage-card">
-                    <div class="advantage-icon">🚫</div>
-                    <div class="advantage-content">
-                        <div class="advantage-title">Блокировщик рекламы</div>
-                        <div class="advantage-description">Встроенная защита от рекламы</div>
-                    </div>
+        <h3 class="section-title">Наши преимущества</h3>
+        <div class="advantages-grid">
+            <div class="advantage-card">
+                <div class="advantage-icon">🚀</div>
+                <div class="advantage-content">
+                    <div class="advantage-title">Высокая скорость</div>
+                    <div class="advantage-description">Без ограничений для комфортного серфинга</div>
                 </div>
             </div>
-        `;
-    }
-
+            
+            <div class="advantage-card">
+                <div class="advantage-icon">🛡️</div>
+                <div class="advantage-content">
+                    <div class="advantage-title">Конфиденциальность</div>
+                    <div class="advantage-description">Ваши данные под надежной защитой</div>
+                </div>
+            </div>
+            
+            <div class="advantage-card bottom-spacing"> <!-- Добавляем класс для отступа снизу -->
+                <div class="advantage-icon">🚫</div>
+                <div class="advantage-content">
+                    <div class="advantage-title">Блокировщик рекламы</div>
+                    <div class="advantage-description">Встроенная защита от рекламы</div>
+                </div>
+            </div>
+        </div>
+    `;
+}
     bindEvents() {
-        // Кнопки в хедере
         document.getElementById('profile-btn').addEventListener('click', () => this.showProfile());
-        document.getElementById('renew-header-btn')?.addEventListener('click', () => this.handleSubscription());
-        document.getElementById('subscribe-header-btn')?.addEventListener('click', () => this.handleSubscription());
-        
-        // Основные действия
+        document.getElementById('subscribe-btn').addEventListener('click', () => this.handleSubscription());
         document.getElementById('vpn-setup-btn').addEventListener('click', () => this.showVpnSetup());
         document.getElementById('devices-btn').addEventListener('click', () => this.handleDevices());
         document.getElementById('support-btn').addEventListener('click', () => this.showSupport());
+    }
+
+    addScrollEffects() {
+        // Плавное появление элементов при скролле
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Наблюдаем за всеми карточками
+        document.querySelectorAll('.card, .action-btn, .advantage-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            observer.observe(el);
+        });
     }
 
     getSubscriptionData() {
@@ -196,5 +230,19 @@ class SilenceProxyApp {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    new SilenceProxyApp();
+    try {
+        new SilenceProxyApp();
+    } catch (error) {
+        console.error('Failed to initialize app:', error);
+        // Показываем fallback интерфейс
+        document.body.innerHTML = `
+            <div class="app">
+                <div style="padding: 20px; text-align: center;">
+                    <h1>Silence Proxy</h1>
+                    <p>Приложение временно недоступно</p>
+                    <button onclick="location.reload()">Перезагрузить</button>
+                </div>
+            </div>
+        `;
+    }
 });
