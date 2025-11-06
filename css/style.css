@@ -158,3 +158,273 @@ body {
 .pulse {
     animation: pulse 2s infinite;
 }
+/* Эффект лучей света */
+.light-rays {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.ray {
+    position: absolute;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(106, 76, 223, 0.1),
+        rgba(106, 76, 223, 0.05),
+        transparent
+    );
+    transform-origin: top left;
+    animation: rayMove 8s linear infinite;
+    filter: blur(15px);
+}
+
+.ray-1 {
+    width: 200px;
+    height: 1px;
+    top: 20%;
+    left: -200px;
+    animation-delay: 0s;
+    animation-duration: 12s;
+}
+
+.ray-2 {
+    width: 300px;
+    height: 1px;
+    top: 40%;
+    left: -300px;
+    animation-delay: 2s;
+    animation-duration: 15s;
+}
+
+.ray-3 {
+    width: 250px;
+    height: 1px;
+    top: 60%;
+    left: -250px;
+    animation-delay: 4s;
+    animation-duration: 10s;
+}
+
+.ray-4 {
+    width: 180px;
+    height: 1px;
+    top: 80%;
+    left: -180px;
+    animation-delay: 6s;
+    animation-duration: 14s;
+}
+
+.ray-5 {
+    width: 220px;
+    height: 1px;
+    top: 30%;
+    left: -220px;
+    animation-delay: 1s;
+    animation-duration: 11s;
+}
+
+@keyframes rayMove {
+    0% {
+        transform: translateX(0) rotate(15deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.3;
+    }
+    90% {
+        opacity: 0.1;
+    }
+    100% {
+        transform: translateX(100vw) rotate(15deg);
+        opacity: 0;
+    }
+}
+
+/* Эффект отражения на карточках */
+.card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(20px);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.03),
+        transparent
+    );
+    transition: left 0.6s ease;
+    z-index: 1;
+}
+
+.card:hover::before {
+    left: 100%;
+}
+
+/* Эффект свечения при наведении */
+.card::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(
+        45deg,
+        transparent,
+        rgba(106, 76, 223, 0.1),
+        transparent
+    );
+    border-radius: var(--radius);
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.card:hover::after {
+    opacity: 1;
+}
+
+/* Анимированный градиент для подписки */
+.subscription-card {
+    background: linear-gradient(
+        145deg,
+        var(--card-bg),
+        #1A1A2A,
+        var(--card-bg)
+    );
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+    position: relative;
+}
+
+@keyframes gradientShift {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Эффект частиц */
+.particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -2;
+}
+
+.particle {
+    position: absolute;
+    background: rgba(106, 76, 223, 0.1);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(1) {
+    width: 4px;
+    height: 4px;
+    top: 20%;
+    left: 10%;
+    animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+    width: 3px;
+    height: 3px;
+    top: 60%;
+    left: 80%;
+    animation-delay: 2s;
+}
+
+.particle:nth-child(3) {
+    width: 2px;
+    height: 2px;
+    top: 40%;
+    left: 30%;
+    animation-delay: 4s;
+}
+
+.particle:nth-child(4) {
+    width: 3px;
+    height: 3px;
+    top: 80%;
+    left: 60%;
+    animation-delay: 1s;
+}
+
+.particle:nth-child(5) {
+    width: 4px;
+    height: 4px;
+    top: 10%;
+    left: 50%;
+    animation-delay: 3s;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0) translateX(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translateY(-20px) translateX(10px);
+        opacity: 0.3;
+    }
+}
+
+/* Улучшаем блюр эффект для лучшей производительности */
+.app {
+    min-height: 100vh;
+    width: 100%;
+    padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 20px));
+    position: relative;
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 430px) {
+    .ray {
+        animation-duration: 6s;
+        filter: blur(10px);
+    }
+    
+    .ray-1, .ray-2, .ray-3, .ray-4, .ray-5 {
+        width: 150px;
+    }
+    
+    .particle {
+        animation-duration: 4s;
+    }
+}
+
+/* Отключаем эффекты для снижения нагрузки */
+@media (prefers-reduced-motion: reduce) {
+    .ray, .particle, .card::before, .card::after {
+        animation: none;
+        display: none;
+    }
+}

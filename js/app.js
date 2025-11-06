@@ -5,12 +5,78 @@ class SilenceProxyApp {
 
     init() {
         this.setupFallbackStyles();
+        this.setupLightEffects(); // Добавляем эффекты света
         this.renderHeader();
         this.renderSubscription();
         this.renderActions();
         this.renderAdvantages();
         this.bindEvents();
         this.addScrollEffects();
+    }
+
+    setupLightEffects() {
+        // Динамическое создание дополнительных лучей
+        this.createDynamicRays();
+        
+        // Эффект взаимодействия с курсором
+        this.setupCursorInteraction();
+    }
+
+    createDynamicRays() {
+        const lightRays = document.querySelector('.light-rays');
+        
+        // Создаем дополнительные случайные лучи
+        for (let i = 0; i < 3; i++) {
+            const ray = document.createElement('div');
+            ray.className = 'ray';
+            
+            const width = 150 + Math.random() * 200;
+            const delay = Math.random() * 8;
+            const duration = 8 + Math.random() * 8;
+            const top = Math.random() * 100;
+            
+            ray.style.cssText = `
+                width: ${width}px;
+                height: 1px;
+                top: ${top}%;
+                left: -${width}px;
+                animation-delay: ${delay}s;
+                animation-duration: ${duration}s;
+                opacity: ${0.1 + Math.random() * 0.1};
+            `;
+            
+            lightRays.appendChild(ray);
+        }
+    }
+
+    setupCursorInteraction() {
+        // Эффект следования за курсором
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth > 768) { // Только для десктопа
+                this.handleMouseMove(e);
+            }
+        });
+    }
+
+    handleMouseMove(e) {
+        const cards = document.querySelectorAll('.card, .action-btn, .advantage-card');
+        const mouseX = e.clientX / window.innerWidth;
+        const mouseY = e.clientY / window.innerHeight;
+        
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const cardCenterX = rect.left + rect.width / 2;
+            const cardCenterY = rect.top + rect.height / 2;
+            
+            const distanceX = Math.abs(e.clientX - cardCenterX);
+            const distanceY = Math.abs(e.clientY - cardCenterY);
+            
+            // Эффект свечения при приближении курсора
+            if (distanceX < 200 && distanceY < 200) {
+                const intensity = 1 - (distanceX + distanceY) / 400;
+                card.style.setProperty('--glow-intensity', intensity);
+            }
+        });
     }
 
     setupFallbackStyles() {
@@ -116,7 +182,7 @@ class SilenceProxyApp {
                     <div class="action-icon">⚙️</div>
                     <div class="action-content">
                         <div class="action-text">Настройка</div>
-                        <div class="action-description">Инструкция для приложения Happ</div>
+                        <div class="action-description">Инструкция по установке</div>
                     </div>
                 </button>
                 
