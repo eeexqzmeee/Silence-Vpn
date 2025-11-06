@@ -10,72 +10,39 @@ class TelegramIntegration {
         this.tg.expand();
         this.tg.ready();
         
-        // Применяем тему Telegram
-        this.applyTelegramTheme();
+        // Отключаем применение темы Telegram для нашего дизайна
+        this.ignoreTelegramTheme();
         
         console.log('Telegram Web App initialized:', {
             version: this.tg.version,
-            platform: this.tg.platform,
-            themeParams: this.tg.themeParams
+            platform: this.tg.platform
         });
     }
 
-    applyTelegramTheme() {
-        // Используем тему Telegram из themeParams
-        if (this.tg.themeParams) {
-            this.applyTheme(this.tg.themeParams);
-        }
+    ignoreTelegramTheme() {
+        // Добавляем класс чтобы отключить тему Telegram
+        document.body.classList.add('ignore-telegram-theme');
         
-        // Слушаем изменения темы
-        this.tg.onEvent('themeChanged', (themeParams) => {
-            this.applyTheme(themeParams);
-        });
+        // Принудительно устанавливаем наши цвета
+        this.forceOurColors();
     }
 
-    applyTheme(themeParams) {
+    forceOurColors() {
         const style = document.documentElement.style;
         
-        // Применяем цвета из темы Telegram
-        if (themeParams.bg_color) {
-            style.setProperty('--background', themeParams.bg_color);
-            document.body.style.backgroundColor = themeParams.bg_color;
-        }
+        // Явно задаем наши цвета, переопределяя тему Telegram
+        style.setProperty('--background', '#0A0A12', 'important');
+        style.setProperty('--card-bg', '#151521', 'important');
+        style.setProperty('--text', '#ffffff', 'important');
+        style.setProperty('--text-light', '#B0B0C0', 'important');
+        style.setProperty('--border', '#2A2A3A', 'important');
+        style.setProperty('--primary', '#6A4CDF', 'important');
+        style.setProperty('--primary-light', '#7D5FE8', 'important');
+        style.setProperty('--primary-dark', '#5A3FC8', 'important');
         
-        if (themeParams.text_color) {
-            style.setProperty('--text', themeParams.text_color);
-        }
-        
-        if (themeParams.hint_color) {
-            style.setProperty('--text-light', themeParams.hint_color);
-        }
-        
-        if (themeParams.button_color) {
-            style.setProperty('--primary', themeParams.button_color);
-            style.setProperty('--primary-light', this.lightenColor(themeParams.button_color, 20));
-            style.setProperty('--primary-dark', this.darkenColor(themeParams.button_color, 20));
-        }
-        
-        if (themeParams.button_text_color) {
-            // Обновляем цвет текста кнопок
-            document.querySelectorAll('.btn-primary, .subscribe-btn').forEach(btn => {
-                btn.style.color = themeParams.button_text_color;
-            });
-        }
-        
-        if (themeParams.secondary_bg_color) {
-            style.setProperty('--card-bg', themeParams.secondary_bg_color);
-        }
-    }
-
-    // Вспомогательные функции для работы с цветами
-    lightenColor(color, percent) {
-        // Упрощенная функция для осветления цвета
-        return color; // В реальном приложении можно добавить логику осветления
-    }
-
-    darkenColor(color, percent) {
-        // Упрощенная функция для затемнения цвета
-        return color; // В реальном приложении можно добавить логику затемнения
+        // Применяем к body
+        document.body.style.backgroundColor = '#0A0A12';
+        document.body.style.color = '#ffffff';
     }
 
     // Безопасные методы для работы с Telegram API
@@ -83,7 +50,7 @@ class TelegramIntegration {
         try {
             this.tg.showAlert(message);
         } catch (e) {
-            alert(message); // Fallback
+            alert(message);
         }
     }
 
@@ -97,7 +64,6 @@ class TelegramIntegration {
         }
     }
 
-    // Закрытие приложения
     closeApp() {
         try {
             this.tg.close();
@@ -106,12 +72,10 @@ class TelegramIntegration {
         }
     }
 
-    // Получение данных пользователя
     getUserData() {
         return this.tg.initDataUnsafe?.user || null;
     }
 
-    // Проверка темной темы
     isDarkTheme() {
         return this.tg.colorScheme === 'dark';
     }
