@@ -13,14 +13,22 @@ class SilenceProxyApp {
 
     renderHeader() {
         const header = document.getElementById('header');
+        const subscriptionData = this.getSubscriptionData();
+        
         header.innerHTML = `
             <div class="logo">
                 <div class="logo-icon">SP</div>
                 <div class="logo-text">Silence Proxy</div>
             </div>
-            <button class="profile-btn" id="profile-btn">
-                👤
-            </button>
+            <div class="profile-section">
+                ${subscriptionData.hasActiveSubscription ? 
+                    '<button class="subscribe-btn" id="renew-header-btn">Продлить</button>' : 
+                    '<button class="subscribe-btn" id="subscribe-header-btn">Подключить</button>'
+                }
+                <button class="profile-btn" id="profile-btn" title="Профиль">
+                    👤
+                </button>
+            </div>
         `;
     }
 
@@ -37,34 +45,34 @@ class SilenceProxyApp {
 
     renderActiveSubscription(data) {
         return `
-            <div class="subscription-header">
-                <h2 class="subscription-title">Премиум подписка</h2>
-                <div class="status-badge status-active">Активна</div>
+            <div class="subscription-status">
+                <div class="status-icon active">🔒</div>
+                <div class="status-info">
+                    <div class="status-title">Премиум подписка</div>
+                    <div class="status-subtitle">Активна до ${data.expiresAt}</div>
+                </div>
+                <div class="status-badge active">Active</div>
             </div>
             
-            <div class="subscription-info">
-                <div class="info-item">
-                    <div class="info-label">Истекает</div>
-                    <div class="info-value">${data.expiresAt}</div>
+            <div class="subscription-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Устройства</div>
+                    <div class="stat-value">${data.devicesUsed}/${data.maxDevices}</div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Устройства</div>
-                    <div class="info-value">${data.devicesUsed}/${data.maxDevices}</div>
+                <div class="stat-item">
+                    <div class="stat-label">Трафик</div>
+                    <div class="stat-value">${data.usedTraffic}</div>
                 </div>
             </div>
             
-            <div class="traffic-section">
-                <div class="traffic-header">
-                    <div class="traffic-label">Использовано трафика</div>
-                    <div class="traffic-value">${data.usedTraffic} из ${data.totalTraffic}</div>
+            <div class="traffic-progress">
+                <div class="traffic-info">
+                    <div class="traffic-label">Использовано</div>
+                    <div class="traffic-value">${data.trafficPercentage}%</div>
                 </div>
                 <div class="progress-bar">
                     <div class="progress-fill" style="width: ${data.trafficPercentage}%"></div>
                 </div>
-            </div>
-            
-            <div class="subscription-action">
-                <button class="btn-primary" id="renew-btn">Продлить подписку</button>
             </div>
         `;
     }
@@ -74,8 +82,7 @@ class SilenceProxyApp {
             <div class="no-subscription">
                 <div class="icon">🔒</div>
                 <h3>Нет активной подписки</h3>
-                <p>Подключите подписку для доступа ко всем функциям</p>
-                <button class="btn-primary" id="subscribe-btn">Подключить подписку</button>
+                <p>Подключите подписку для доступа ко всем функциям VPN</p>
             </div>
         `;
     }
@@ -120,7 +127,7 @@ class SilenceProxyApp {
                     <div class="advantage-icon">🚀</div>
                     <div class="advantage-content">
                         <div class="advantage-title">Высокая скорость</div>
-                        <div class="advantage-description">Быстрое подключение без ограничений скорости для комфортного серфинга</div>
+                        <div class="advantage-description">Без ограничений для комфортного серфинга</div>
                     </div>
                 </div>
                 
@@ -128,7 +135,7 @@ class SilenceProxyApp {
                     <div class="advantage-icon">🛡️</div>
                     <div class="advantage-content">
                         <div class="advantage-title">Конфиденциальность</div>
-                        <div class="advantage-description">Ваши данные под надежной защитой без логирования</div>
+                        <div class="advantage-description">Ваши данные под надежной защитой</div>
                     </div>
                 </div>
                 
@@ -136,7 +143,7 @@ class SilenceProxyApp {
                     <div class="advantage-icon">🚫</div>
                     <div class="advantage-content">
                         <div class="advantage-title">Блокировщик рекламы</div>
-                        <div class="advantage-description">Встроенная защита от рекламы и трекеров</div>
+                        <div class="advantage-description">Встроенная защита от рекламы</div>
                     </div>
                 </div>
             </div>
@@ -144,12 +151,12 @@ class SilenceProxyApp {
     }
 
     bindEvents() {
+        // Кнопки в хедере
         document.getElementById('profile-btn').addEventListener('click', () => this.showProfile());
-        document.addEventListener('click', (e) => {
-            if (e.target.id === 'subscribe-btn' || e.target.id === 'renew-btn') {
-                this.handleSubscription();
-            }
-        });
+        document.getElementById('renew-header-btn')?.addEventListener('click', () => this.handleSubscription());
+        document.getElementById('subscribe-header-btn')?.addEventListener('click', () => this.handleSubscription());
+        
+        // Основные действия
         document.getElementById('vpn-setup-btn').addEventListener('click', () => this.showVpnSetup());
         document.getElementById('devices-btn').addEventListener('click', () => this.handleDevices());
         document.getElementById('support-btn').addEventListener('click', () => this.showSupport());

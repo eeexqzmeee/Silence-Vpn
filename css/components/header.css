@@ -2,19 +2,19 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0 20px 0;
+    padding: 4px 0 24px 0;
     width: 100%;
 }
 
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
 }
 
 .logo-icon {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
     border-radius: 14px;
     display: flex;
@@ -23,7 +23,7 @@
     color: white;
     font-weight: 800;
     font-size: 18px;
-    box-shadow: 0 8px 20px rgba(106, 76, 223, 0.4);
+    box-shadow: 0 8px 25px rgba(106, 76, 223, 0.4);
 }
 
 .logo-text {
@@ -34,6 +34,31 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
     letter-spacing: -0.5px;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.subscribe-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 18px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(106, 76, 223, 0.4);
+    white-space: nowrap;
+}
+
+.subscribe-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(106, 76, 223, 0.6);
 }
 
 .profile-btn {
@@ -60,24 +85,30 @@
 
 @media (max-width: 430px) {
     .header {
-        padding: 2px 0 18px 0;
+        padding: 2px 0 20px 0;
     }
     
     .logo-icon {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         font-size: 17px;
-        border-radius: 12px;
+        border-radius: 13px;
     }
     
     .logo-text {
         font-size: 20px;
     }
     
+    .subscribe-btn {
+        padding: 11px 18px;
+        font-size: 14px;
+        border-radius: 16px;
+    }
+    
     .profile-btn {
         width: 44px;
         height: 44px;
-        border-radius: 12px;
+        border-radius: 13px;
         font-size: 19px;
     }
 }

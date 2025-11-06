@@ -1,40 +1,40 @@
 .advantages-grid {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     width: 100%;
 }
 
 .advantage-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px;
+    gap: 18px;
+    padding: 22px;
     background: var(--card-bg);
-    border-radius: 16px;
+    border-radius: 22px;
     border: 1.5px solid var(--border);
     transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
 }
 
 .advantage-card:hover {
     transform: translateY(-2px);
     border-color: var(--primary);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
 }
 
 .advantage-icon {
-    width: 52px;
-    height: 52px;
+    width: 54px;
+    height: 54px;
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    border-radius: 14px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    font-size: 22px;
+    font-size: 24px;
     flex-shrink: 0;
-    box-shadow: 0 8px 20px rgba(106, 76, 223, 0.4);
+    box-shadow: 0 8px 25px rgba(106, 76, 223, 0.4);
 }
 
 .advantage-content {
@@ -43,7 +43,7 @@
 }
 
 .advantage-title {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 700;
     margin-bottom: 6px;
     color: var(--text);
@@ -51,30 +51,34 @@
 }
 
 .advantage-description {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text-light);
     line-height: 1.4;
 }
 
 @media (max-width: 430px) {
+    .advantages-grid {
+        gap: 12px;
+    }
+    
     .advantage-card {
-        padding: 18px;
-        gap: 14px;
-        border-radius: 14px;
+        padding: 20px;
+        gap: 16px;
+        border-radius: 20px;
     }
     
     .advantage-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-        border-radius: 12px;
+        width: 50px;
+        height: 50px;
+        font-size: 22px;
+        border-radius: 14px;
     }
     
     .advantage-title {
-        font-size: 15px;
+        font-size: 16px;
     }
     
     .advantage-description {
-        font-size: 13px;
+        font-size: 14px;
     }
 }

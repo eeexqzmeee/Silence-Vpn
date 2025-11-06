@@ -13,8 +13,9 @@
     --warning: #FF9800;
     --error: #f44336;
     --shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --radius: 20px;
-    --radius-sm: 12px;
+    --radius: 26px; /* iOS-like скругления */
+    --radius-sm: 20px;
+    --radius-lg: 30px;
 }
 
 * {
@@ -45,33 +46,23 @@ body {
     padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
-/* Убираем любые горизонтальные скроллы */
-* {
-    max-width: 100%;
-}
-
-img, svg, video {
-    max-width: 100%;
-    height: auto;
-}
-
 /* Common Components */
 .card {
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 24px;
     margin-bottom: 16px;
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
 }
 
 .section-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     color: var(--text);
-    letter-spacing: -0.2px;
+    letter-spacing: -0.3px;
 }
 
 /* Utility Classes */
@@ -90,13 +81,13 @@ img, svg, video {
     }
     
     .card {
-        padding: 18px;
+        padding: 20px;
         margin-bottom: 14px;
-        border-radius: 18px;
+        border-radius: 22px;
     }
     
     .section-title {
-        font-size: 17px;
-        margin-bottom: 14px;
+        font-size: 18px;
+        margin-bottom: 18px;
     }
 }
