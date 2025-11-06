@@ -5,7 +5,7 @@ class SilenceProxyApp {
 
     init() {
         this.setupFallbackStyles();
-        this.setupLightEffects(); // Добавляем эффекты света
+        this.setupLightEffects();
         this.renderHeader();
         this.renderSubscription();
         this.renderActions();
@@ -238,7 +238,7 @@ class SilenceProxyApp {
     }
 
     addScrollEffects() {
-        // Плавное появление элементов при скролле
+        // Плавное появление элементов при скролле, но не для преимуществ
         const observerOptions = {
             threshold: 0.1,
             rootMargin: '0px 0px -50px 0px'
@@ -253,8 +253,8 @@ class SilenceProxyApp {
             });
         }, observerOptions);
 
-        // Наблюдаем за всеми карточками
-        document.querySelectorAll('.card, .action-btn, .advantage-card').forEach(el => {
+        // Наблюдаем только за карточками и кнопками, но не за преимуществами
+        document.querySelectorAll('.card:not(.advantage-card), .action-btn').forEach(el => {
             el.style.opacity = '0';
             el.style.transform = 'translateY(30px)';
             el.style.transition = 'all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
