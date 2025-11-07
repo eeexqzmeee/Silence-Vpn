@@ -448,3 +448,113 @@ body.ignore-telegram-theme .card {
     color: var(--text) !important;
     border-color: var(--border) !important;
 }
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}
+
+/* Компактные модальные окна */
+.modal-content.compact {
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.modal-content.compact::-webkit-scrollbar {
+    width: 4px;
+}
+
+.modal-content.compact::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+
+.modal-content.compact::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 2px;
+}
+
+/* Убираем лимит трафика */
+.traffic-unlimited {
+    text-align: center;
+    padding: 20px;
+}
+
+.traffic-unlimited .icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    color: var(--success);
+}
+
+.traffic-unlimited h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+.traffic-unlimited p {
+    color: var(--text-light);
+    font-size: 14px;
+}
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+}

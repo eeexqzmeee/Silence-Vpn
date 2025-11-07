@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="css/components/subscription.css">
     <link rel="stylesheet" href="css/components/buttons.css">
     <link rel="stylesheet" href="css/components/advantages.css">
-    <link rel="stylesheet" href="css/components/profile.css">
+    <link rel="stylesheet" href="css/components/pages.css">
 </head>
 <body>
     <!-- Эффект лучей света -->
@@ -34,43 +34,128 @@
     </div>
 
     <div class="app">
-        <div class="container">
-            <!-- Header -->
-            <header class="header" id="header">
-                <!-- Загружается через JS -->
-            </header>
+        <!-- Главная страница -->
+        <div id="main-page" class="page active">
+            <div class="container">
+                <!-- Header -->
+                <header class="header">
+                    <div class="logo">
+                        <div class="logo-icon">SP</div>
+                        <div class="logo-text">Silence Proxy</div>
+                    </div>
+                    <button class="profile-btn" onclick="app.showPage('profile-page')" title="Профиль">
+                        👤
+                    </button>
+                </header>
 
-            <!-- Main Content -->
-            <main class="main-content">
-                <!-- Subscription Block -->
-                <section class="subscription-section" id="subscription-section">
-                    <!-- Загружается через JS -->
-                </section>
+                <!-- Main Content -->
+                <main class="main-content">
+                    <!-- Subscription Block -->
+                    <section class="subscription-section" id="subscription-section">
+                        <!-- Загружается через JS -->
+                    </section>
 
-                <!-- Action Buttons -->
-                <section class="actions-section" id="actions-section">
-                    <!-- Загружается через JS -->
-                </section>
+                    <!-- Action Buttons -->
+                    <section class="actions-section" id="actions-section">
+                        <!-- Загружается через JS -->
+                    </section>
 
-                <!-- Advantages -->
-                <section class="advantages-section" id="advantages-section">
-                    <!-- Загружается через JS -->
-                </section>
-            </main>
+                    <!-- Advantages -->
+                    <section class="advantages-section" id="advantages-section">
+                        <!-- Загружается через JS -->
+                    </section>
+                </main>
+            </div>
         </div>
 
-        <!-- Modals -->
-        <div class="modal" id="profile-modal">
-            <!-- Загружается через JS -->
+        <!-- Страница профиля -->
+        <div id="profile-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="app.showPage('main-page')">← Назад</button>
+                <h1>Профиль</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="page-content">
+                <div id="profile-content">
+                    <!-- Загружается через JS -->
+                </div>
+            </div>
         </div>
 
-        <div class="modal" id="support-modal">
-            <!-- Загружается через JS -->
+        <!-- Страница подписки -->
+        <div id="subscription-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="app.showPage('main-page')">← Назад</button>
+                <h1>Оформление подписки</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="page-content">
+                <div id="subscription-content">
+                    <!-- Загружается через JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница устройств -->
+        <div id="devices-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="app.showPage('main-page')">← Назад</button>
+                <h1>Управление устройствами</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="page-content">
+                <div id="devices-content">
+                    <!-- Загружается через JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница настройки VPN -->
+        <div id="vpn-setup-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="app.showPage('main-page')">← Назад</button>
+                <h1>Настройка VPN</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="page-content">
+                <div id="vpn-setup-content">
+                    <!-- Загружается через JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница поддержки -->
+        <div id="support-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="app.showPage('main-page')">← Назад</button>
+                <h1>Поддержка</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="page-content">
+                <div id="support-content">
+                    <!-- Загружается через JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница оплаты СБП -->
+        <div id="sbp-page" class="page">
+            <div class="page-header">
+                <button class="back-btn" onclick="app.showPage('subscription-page')">← Назад</button>
+                <h1>Оплата через СБП</h1>
+                <div class="header-placeholder"></div>
+            </div>
+            <div class="page-content">
+                <div id="sbp-content">
+                    <!-- Загружается через JS -->
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- JavaScript -->
-    <script src="js/telegram.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/config-generator.js"></script>
     <script src="js/subscription.js"></script>
     <script src="js/app.js"></script>
 </body>
