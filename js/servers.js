@@ -40,20 +40,11 @@ function writeDB(data) {
 const SERVERS = [
     {
         id: 1,
-        host: 'vpn1.silenceproxy.com',
-        ip: '123.123.123.123', // Ваш IP сервера
+        host: '45.90.236.48',
+        ip: '45.90.236.48', // Ваш IP сервера
         port: 443,
         location: 'Москва',
         load: 45,
-        active: true
-    },
-    {
-        id: 2, 
-        host: 'vpn2.silenceproxy.com',
-        ip: '123.123.123.124', // Дополнительный сервер если есть
-        port: 443,
-        location: 'Санкт-Петербург',
-        load: 30,
         active: true
     }
 ];

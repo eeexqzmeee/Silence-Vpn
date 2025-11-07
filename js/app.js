@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://your-hosting.com/api'; // Замените на ваш домен
+const API_BASE_URL = 'https://45.90.236.48.com/api'; // Замените на ваш домен
 
 class APIService {
     constructor() {
