@@ -10,9 +10,9 @@
     --danger: #F44336;
     --info: #2196F3;
     
-    --glass-bg: rgba(27, 27, 30, 0.7);
-    --glass-border: rgba(253, 236, 239, 0.1);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.36);
+    --glass-bg: rgba(27, 27, 30, 0.85);
+    --glass-border: rgba(253, 236, 239, 0.08);
+    --glass-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.2);
     
     --font-primary: 'Segoe UI', system-ui, sans-serif;
     --font-size-xs: 0.75rem;

@@ -3,10 +3,13 @@
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    background: rgba(27, 27, 30, 0.9); /* Увеличиваем непрозрачность */
-    backdrop-filter: blur(30px) saturate(180%); /* Увеличиваем размытие и насыщенность */
-    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    background: rgba(27, 27, 30, 0.95); /* Еще более непрозрачный */
+    backdrop-filter: blur(20px); /* Уменьшаем размытие для производительности */
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--glass-border);
+    /* Отключаем аппаратное ускорение для фиксированных элементов */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .header-content {
@@ -37,9 +40,20 @@
     cursor: pointer;
     transition: all var(--transition-normal);
     font-size: 1.25rem;
+    /* Отключаем трансформации при скролле */
+    will-change: transform;
 }
 
 .profile-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 25px rgba(116, 92, 151, 0.4);
+}
+
+/* Альтернативный вариант если все еще лагает - используем сплошной цвет */
+@media (max-width: 768px) {
+    .header {
+        background: var(--primary); /* Сплошной цвет на мобилках */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
 }

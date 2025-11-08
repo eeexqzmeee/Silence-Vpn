@@ -17,14 +17,20 @@ input, textarea {
     user-select: text;
 }
 
+html {
+    -webkit-overflow-scrolling: touch;
+}
+
 body {
     font-family: var(--font-primary);
     background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
     color: var(--secondary);
     min-height: 100vh;
     line-height: 1.6;
-    /* Обеспечиваем что фон покрывает всю высоту */
     background-attachment: fixed;
+    /* Оптимизация скролла */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Убедимся что градиент покрывает всю страницу */
