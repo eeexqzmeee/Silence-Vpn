@@ -1,0 +1,98 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent; /* Отключаем выделение на мобилках */
+    -webkit-user-select: none; /* Отключаем выделение текста */
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Разрешаем выделение для полей ввода */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+}
+
+body {
+    font-family: var(--font-primary);
+    background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+    color: var(--secondary);
+    min-height: 100vh;
+    line-height: 1.6;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1;
+    padding: var(--space-md);
+    max-width: 500px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* Новая структура кнопок */
+.actions-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.actions-grid-top {
+    grid-template-columns: 1fr 1fr;
+}
+
+.actions-grid-bottom {
+    grid-template-columns: 1fr;
+}
+
+.wide-btn {
+    grid-column: 1 / -1;
+}
+
+.glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-xl);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+    backdrop-filter: blur(20px);
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+@media (max-width: 480px) {
+    .main {
+        padding: var(--space-sm);
+    }
+    
+    .actions-grid {
+        gap: var(--space-sm);
+    }
+    
+    .page {
+        padding: var(--space-md);
+    }
+}

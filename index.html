@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silence Proxy</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/utils/variables.css">
+    <link rel="stylesheet" href="css/utils/animations.css">
+    <link rel="stylesheet" href="css/components/headers.css">
+    <link rel="stylesheet" href="css/components/cards.css">
+    <link rel="stylesheet" href="css/components/buttons.css">
+    <link rel="stylesheet" href="css/components/modals.css">
+    <link rel="stylesheet" href="css/components/pages.css">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Font Awesome без трекинга -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+    <div id="app">
+        <!-- Fallback content -->
+        <div id="fallback-message" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #0F0F12; color: #FDECEF; display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 2rem; text-align: center;">
+            <div>
+                <h1 style="margin-bottom: 1rem; background: linear-gradient(135deg, #FDECEF, #745C97); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Silence Proxy</h1>
+                <p>Приложение загружается...</p>
+            </div>
+        </div>
+        
+        <header class="header" id="header"></header>
+        <main class="main" id="main"></main>
+        <div id="modals-container"></div>
+        <div id="pages-container"></div>
+    </div>
+
+    <!-- JS в правильном порядке -->
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/database.js"></script>
+    <script src="js/components/modalManager.js"></script>
+    <script src="js/components/pageManager.js"></script>
+    <script src="js/components/subscriptionManager.js"></script>
+    <script src="js/components/deviceManager.js"></script>
+    <script src="js/app.js"></script>
+
+    <script>
+        // Глобальный обработчик ошибок
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+
+        // Скрываем fallback сообщение когда приложение загружено
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const fallback = document.getElementById('fallback-message');
+                if (fallback) {
+                    fallback.style.display = 'none';
+                }
+            }, 500);
+        });
+
+        // Fallback для Font Awesome если CDN не загрузился
+        setTimeout(() => {
+            if (!window.FontAwesome || !document.querySelector('.fa')) {
+                console.log('Font Awesome not loaded, applying fallback styles');
+                const style = document.createElement('style');
+                style.textContent = `
+                    .fa, .fas, .far, .fal, .fad, .fab {
+                        font-family: 'Segoe UI', system-ui, sans-serif !important;
+                    }
+                    .fa-user:before { content: "👤"; }
+                    .fa-bars:before { content: "☰"; }
+                    .fa-download:before { content: "📥"; }
+                    .fa-headset:before { content: "💬"; }
+                    .fa-mobile-alt:before { content: "📱"; }
+                    .fa-arrow-left:before { content: "←"; }
+                    .fa-lock:before { content: "🔒"; }
+                    .fa-key:before { content: "🔑"; }
+                    .fa-play-circle:before { content: "▶️"; }
+                    .fa-apple:before { content: "🍎"; }
+                    .fa-google-play:before { content: "🤖"; }
+                    .fa-cc-visa:before { content: "💳"; }
+                    .fa-telegram:before { content: "📨"; }
+                    .fa-times:before { content: "✕"; }
+                `;
+                document.head.appendChild(style);
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
