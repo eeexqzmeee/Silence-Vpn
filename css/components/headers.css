@@ -3,8 +3,9 @@
     position: sticky;
     top: 0;
     z-index: var(--z-sticky);
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
+    background: rgba(27, 27, 30, 0.9); /* Увеличиваем непрозрачность */
+    backdrop-filter: blur(30px) saturate(180%); /* Увеличиваем размытие и насыщенность */
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
     border-bottom: 1px solid var(--glass-border);
 }
 
