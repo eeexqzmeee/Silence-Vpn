@@ -1,0 +1,25 @@
+/* Оптимизации для производительности */
+* {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000;
+}
+
+.glass {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Отключаем анимации для пользователей с prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Предзагрузка критичных ресурсов */
+.link[rel=preload] {
+    display: none;
+}

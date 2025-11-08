@@ -92,6 +92,20 @@ class PageManager {
         this.renderPage(pageHTML, 'subscription');
     }
 
+    setupInstructionEvents() {
+        const copyKeyBtn = document.getElementById('copy-key-btn');
+        if (copyKeyBtn) {
+            copyKeyBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                const success = await app.subscriptionManager.downloadConfig(1);
+                if (success) {
+                    // Показываем инструкцию по использованию
+                    Helpers.showNotification('Ключ-ссылка скопирована! Откройте Happ и вставьте ссылку для подключения.', 'success', 5000);
+                }
+            });
+        }
+    }
+
     openInstruction() {
         const pageHTML = `
             <div class="page">
@@ -103,7 +117,7 @@ class PageManager {
                         <h1 class="page-title">Инструкция по установке</h1>
                         <p class="page-subtitle">Подключитесь к Silence Proxy за 3 простых шага</p>
                     </div>
-        
+
                     <div class="instruction-steps">
                         <div class="step">
                             <div class="step-number">1</div>
@@ -111,7 +125,7 @@ class PageManager {
                                 <h4>Скачайте Happ</h4>
                                 <p>Установите приложение Happ из App Store. Это безопасное приложение для настройки VPN подключений.</p>
                                 <div style="margin-top: var(--space-md);">
-                                    <a href="https://apps.apple.com/app/happ-vpn/id123456789" class="app-store-btn" target="_blank">
+                                    <a href="https://apps.apple.com/ru/app/happ-vpn/id6450534064" class="app-store-btn" target="_blank">
                                         <i class="fab fa-apple"></i> Скачать в App Store
                                     </a>
                                 </div>
@@ -121,7 +135,7 @@ class PageManager {
                             <div class="step-number">2</div>
                             <div class="step-content">
                                 <h4>Получите ключ-ссылку</h4>
-                                <p>После оплаты подписки скопируйте ваш уникальный ключ-ссылку для подключения к VPN сервису.</p>
+                                <p>Нажмите кнопку ниже чтобы скопировать ваш уникальный ключ-ссылку для подключения к VPN сервису.</p>
                             </div>
                         </div>
                         <div class="step">
@@ -132,17 +146,39 @@ class PageManager {
                             </div>
                         </div>
                     </div>
-        
+
                     <div class="action-buttons" style="margin-top: var(--space-2xl);">
-                        <button class="btn btn-primary btn-large" onclick="app.subscriptionManager.downloadConfig()">
+                        <button class="btn btn-primary btn-large" id="copy-key-btn">
                             <i class="fas fa-key"></i>
                             Скопировать ключ-ссылку
                         </button>
+                        <button class="btn btn-secondary" onclick="app.subscriptionManager.downloadConfig(1)">
+                            <i class="fas fa-download"></i>
+                            Для устройства 1
+                        </button>
+                        ${app.subscriptionManager.currentDevices > 1 ? `
+                            <button class="btn btn-secondary" onclick="app.subscriptionManager.downloadConfig(2)">
+                                <i class="fas fa-download"></i>
+                                Для устройства 2
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div style="background: var(--glass-bg); border-radius: var(--radius-xl); padding: var(--space-xl); border: 1px solid var(--glass-border); margin-top: var(--space-xl);">
+                        <h4 style="margin-bottom: var(--space-md); color: var(--secondary);">💡 Советы по использованию:</h4>
+                        <ul style="color: rgba(253, 236, 239, 0.7); font-size: var(--font-size-sm); line-height: 1.6; padding-left: var(--space-md);">
+                            <li>После копирования ссылки, откройте Happ и вставьте её в поле "Импорт конфигурации"</li>
+                            <li>Для каждого устройства используйте отдельную ссылку</li>
+                            <li>При переустановке приложения просто скопируйте ссылку заново</li>
+                            <li>Ссылка действительна в течение всего срока подписки</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         `;
-        this.renderPage(pageHTML, 'instruction');
+        this.renderPage(pageHTML, 'instruction', () => {
+            this.setupInstructionEvents();
+        });
     }
 
     selectPeriod(element, months) {

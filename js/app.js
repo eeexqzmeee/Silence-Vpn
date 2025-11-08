@@ -5,8 +5,10 @@ class SilenceProxyApp {
         this.pageManager = new PageManager();
         this.subscriptionManager = new SubscriptionManager();
         this.deviceManager = new DeviceManager();
+        this.vpnManager = new VPNManager();
+        
         this.userData = {
-            id: 123456789,
+            id: 'user_' + Math.random().toString(36).substr(2, 9),
             name: '@username',
             paymentMethod: 'Карта •••• 1234'
         };
@@ -16,7 +18,6 @@ class SilenceProxyApp {
 
     async init() {
         try {
-            // Пытаемся инициализировать базу, но не блокируем приложение
             await this.database.init().catch(error => {
                 console.warn('Database init failed, continuing without DB:', error);
             });
@@ -24,13 +25,41 @@ class SilenceProxyApp {
             console.warn('Database initialization error:', error);
         }
 
-        // Всегда рендерим интерфейс независимо от состояния базы
+        // Проверяем статус подписки
+        this.subscriptionManager.checkSubscriptionStatus();
+
         this.renderHeader();
         this.renderMain();
         this.setupEventListeners();
 
-        // Пытаемся сохранить данные если база доступна
-        this.tryInitializeUserData();
+        // Инициализируем пользователя
+        await this.subscriptionManager.initializeUser(this.userData.id, this.userData.name);
+        
+        // Генерируем начальные конфиги если их нет и подписка активна
+        await this.initializeDefaultConfigs();
+    }
+
+    async initializeDefaultConfigs() {
+        if (this.subscriptionManager.userConfig.active) {
+            const masterConfig = JSON.parse(localStorage.getItem('silenceProxy_masterConfig') || 'null');
+            
+            if (!masterConfig || !this.vpnManager.isConfigValid(masterConfig)) {
+                await this.subscriptionManager.generateMasterConfig();
+            }
+        }
+    }
+
+    showFallbackUI() {
+        const main = document.getElementById('main');
+        if (main) {
+            main.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <h2>Silence Proxy</h2>
+                    <p>Приложение загружено в упрощенном режиме</p>
+                    <button class="btn btn-primary" onclick="location.reload()">Перезагрузить</button>
+                </div>
+            `;
+        }
     }
 
     async tryInitializeUserData() {
@@ -74,31 +103,40 @@ class SilenceProxyApp {
         if (!main) return;
         
         const subscription = this.subscriptionManager.getSubscriptionData();
+        const serverInfo = this.subscriptionManager.getServerInfo();
         
         main.innerHTML = `
             <section class="subscription-card glass">
                 <div class="subscription-header">
                     <h2>Ваша подписка</h2>
-                    <span class="status-badge active">Активна</span>
+                    <span class="status-badge ${subscription.active ? 'active' : 'inactive'}">
+                        ${subscription.active ? 'Активна' : 'Не активна'}
+                    </span>
                 </div>
-                
+
                 <div class="subscription-info">
+                    <div class="info-item">
+                        <span class="label">Статус</span>
+                        <span class="value ${subscription.active ? 'active' : 'inactive'}">
+                            ${subscription.active ? `✅ Активна (${subscription.daysRemaining} дн.)` : '❌ Не активна'}
+                        </span>
+                    </div>
                     <div class="info-item">
                         <span class="label">Устройства</span>
                         <span class="value">${subscription.devices}/${subscription.maxDevices}</span>
                     </div>
                     <div class="info-item">
                         <span class="label">Заканчивается</span>
-                        <span class="value">${this.formatDate(subscription.endDate)}</span>
+                        <span class="value">${Helpers.formatDate(subscription.endDate)}</span>
                     </div>
                     <div class="info-item">
-                        <span class="label">Трафик</span>
-                        <span class="value">${subscription.trafficUsed}</span>
+                        <span class="label">Сервер</span>
+                        <span class="value">🇳🇱 ${serverInfo ? serverInfo.server.location : 'Netherlands'}</span>
                     </div>
                 </div>
 
                 <button class="btn btn-primary btn-large" id="renew-btn">
-                    Продлить подписку
+                    ${subscription.active ? 'Продлить подписку' : 'Активировать подписку'}
                 </button>
             </section>
 
@@ -107,7 +145,7 @@ class SilenceProxyApp {
                     <i class="fas fa-mobile-alt"></i>
                     <span>Устройства</span>
                 </button>
-                
+
                 <button class="action-btn glass" id="instruction-btn">
                     <i class="fas fa-download"></i>
                     <span>Инструкция</span>
@@ -125,42 +163,109 @@ class SilenceProxyApp {
                 <h3>Статистика использования</h3>
                 <div class="stats-grid">
                     <div class="stat">
-                        <div class="stat-value">87%</div>
-                        <div class="stat-label">Стабильность соединения</div>
+                        <div class="stat-value">${subscription.active ? '87%' : '0%'}</div>
+                        <div class="stat-label">Стабильность</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">24/7</div>
-                        <div class="stat-label">Доступность сервиса</div>
+                        <div class="stat-value">${subscription.active ? '24/7' : '---'}</div>
+                        <div class="stat-label">Доступность</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">56 ms</div>
-                        <div class="stat-label">Средний пинг</div>
+                        <div class="stat-value">${subscription.active ? '56 ms' : '---'}</div>
+                        <div class="stat-label">Пинг</div>
                     </div>
                 </div>
             </section>
         `;
-    }
 
+        // Переинициализируем обработчики событий после рендера
+        this.setupEventListeners();
+    }
     setupEventListeners() {
-        // Отложенная инициализация событий
+        // Используем делегирование событий для динамически созданных элементов
+        document.addEventListener('click', (e) => {
+            const target = e.target;
+            
+            // Обработка кнопки продления
+            if (target.id === 'renew-btn' || target.closest('#renew-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.pageManager.openSubscription();
+                return;
+            }
+            
+            // Обработка кнопки устройств
+            if (target.id === 'devices-btn' || target.closest('#devices-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.modalManager.openDevices(this.subscriptionManager.currentDevices);
+                setTimeout(() => this.deviceManager.setupSlider(), 100);
+                return;
+            }
+            
+            // Обработка кнопки инструкции
+            if (target.id === 'instruction-btn' || target.closest('#instruction-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.pageManager.openInstruction();
+                return;
+            }
+            
+            // Обработка кнопки поддержки
+            if (target.id === 'support-btn' || target.closest('#support-btn')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.pageManager.openSupport();
+                return;
+            }
+        });
+    
+        // Также оставляем прямые обработчики для надежности
         setTimeout(() => {
             const renewBtn = document.getElementById('renew-btn');
             const instructionBtn = document.getElementById('instruction-btn');
             const profileBtn = document.getElementById('profile-header-btn');
             const supportBtn = document.getElementById('support-btn');
             const devicesBtn = document.getElementById('devices-btn');
-
-            if (renewBtn) renewBtn.addEventListener('click', () => this.pageManager.openSubscription());
-            if (instructionBtn) instructionBtn.addEventListener('click', () => this.pageManager.openInstruction());
-            if (profileBtn) profileBtn.addEventListener('click', () => this.pageManager.openProfile(this.userData));
-            if (supportBtn) supportBtn.addEventListener('click', () => this.pageManager.openSupport());
-            if (devicesBtn) devicesBtn.addEventListener('click', () => {
-                this.modalManager.openDevices(this.subscriptionManager.currentDevices);
-                setTimeout(() => this.deviceManager.setupSlider(), 100);
-            });
+        
+            if (renewBtn) {
+                renewBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.pageManager.openSubscription();
+                });
+            }
+            if (instructionBtn) {
+                instructionBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.pageManager.openInstruction();
+                });
+            }
+            if (profileBtn) {
+                profileBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.pageManager.openProfile(this.userData);
+                });
+            }
+            if (supportBtn) {
+                supportBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.pageManager.openSupport();
+                });
+            }
+            if (devicesBtn) {
+                devicesBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.modalManager.openDevices(this.subscriptionManager.currentDevices);
+                    setTimeout(() => this.deviceManager.setupSlider(), 100);
+                });
+            }
         }, 100);
     }
-
     formatDate(dateString) {
         const date = new Date(dateString);
         return date.toLocaleDateString('ru-RU');

@@ -145,3 +145,16 @@
         height: 90px;
     }
 }
+.status-badge.inactive {
+    background: rgba(244, 67, 54, 0.2);
+    color: var(--danger);
+    border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.value.active {
+    color: var(--success);
+}
+
+.value.inactive {
+    color: var(--danger);
+}

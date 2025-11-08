@@ -1,282 +1,482 @@
 class SubscriptionManager {
     constructor() {
-        this.currentDevices = 3;
+        this.currentDevices = 1;
         this.maxDevices = 5;
-        this.basePrice = 100; // 100 рублей за 1 устройство
-        this.additionalDevicePrice = 50; // 50 рублей за каждое доп. устройство
-        this.serverConfig = {
-            ip: "45.90.236.48", // Замени на IP твоего сервера
-            port: 443,
-            uuid: "b1b5bb49-6d21-4028-a62d-e9608787912f", // Замени на твой UUID
-            publicKey: "3eNsbDFU_VHTtwIsGXn2K5HLmUgrCCyJFxfA-af-KAg", // Замени на твой публичный ключ
-            shortId: "88",
-            serverName: "www.amazon.com"
+        this.basePrice = 100;
+        this.additionalDevicePrice = 50;
+        this.userConfig = null;
+        this.paymentProcessor = new PaymentProcessor();
+        
+        // Безопасная инициализация VPN Manager
+        this.vpnManager = null;
+        
+        this.loadUserConfig();
+        this.initializeVpnManager();
+    }
+
+    initializeVpnManager() {
+        try {
+            if (window.app && window.app.vpnManager) {
+                this.vpnManager = window.app.vpnManager;
+            } else if (typeof VPNManager !== 'undefined') {
+                this.vpnManager = new VPNManager();
+            }
+        } catch (error) {
+            console.warn('VPN Manager initialization failed:', error);
+            this.vpnManager = this.createMockVpnManager();
+        }
+    }
+    
+    // Мок VPN Manager на случай ошибок
+    createMockVpnManager() {
+        return {
+            generateMasterConfig: () => Promise.resolve({ config: {} }),
+            getUserConfig: () => null,
+            saveUserConfig: () => {},
+            isConfigValid: () => true,
+            updateConfigUsage: () => {},
+            generateVlessLink: () => 'vless://mock-config'
         };
     }
 
-    calculatePrice(months, devices) {
-        const basePrice = this.basePrice * months;
-        const additionalPrice = Math.max(0, devices - 1) * this.additionalDevicePrice * months;
-        return basePrice + additionalPrice;
+    // Загрузка конфига пользователя
+    loadUserConfig() {
+        const saved = localStorage.getItem('silenceProxy_userConfig');
+        if (saved) {
+            try {
+                this.userConfig = JSON.parse(saved);
+                this.currentDevices = this.userConfig.devices || 1;
+                
+                // Проверяем активность подписки
+                this.checkSubscriptionStatus();
+            } catch (error) {
+                console.error('Error loading user config:', error);
+                this.createDefaultUserConfig();
+            }
+        } else {
+            this.createDefaultUserConfig();
+        }
     }
 
-    updateDevices(devices) {
+    createDefaultUserConfig() {
+        // Для демо создаем активную подписку на 30 дней
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+        
+        this.userConfig = {
+            userId: 'user_' + Math.random().toString(36).substr(2, 9),
+            name: '@username',
+            devices: 1,
+            subscriptionEnd: endDate.toISOString().split('T')[0],
+            active: true,
+            referralCode: this.generateReferralCode(),
+            usedPromocodes: [],
+            created: new Date().toISOString(),
+            subscriptionStart: new Date().toISOString()
+        };
+        this.saveUserConfig();
+    }
+
+    // Инициализация пользователя
+    async initializeUser(telegramId, name) {
+        this.userConfig.userId = telegramId;
+        this.userConfig.name = name;
+        this.saveUserConfig();
+        return this.userConfig;
+    }
+
+    // Генерация конфигов для устройств (обновленная версия)
+    async generateDeviceConfigs() {
+        if (!window.app.vpnManager) return;
+
+        try {
+            // В новой системе создаем один мастер-конфиг для всех устройств
+            await this.generateMasterConfig();
+
+            Helpers.showNotification(`✅ Конфиг обновлен для ${this.currentDevices} устройств`, 'success');
+        } catch (error) {
+            console.error('Failed to generate device configs:', error);
+            Helpers.showNotification('❌ Ошибка обновления конфига', 'error');
+        }
+    }
+
+    // Скачивание конфига (обновленная версия)
+    async downloadConfig(deviceNumber = 1) {
+        if (!this.userConfig.active) {
+            Helpers.showNotification('❌ Подписка не активна', 'error');
+            return false;
+        }
+
+        if (deviceNumber > this.currentDevices) {
+            Helpers.showNotification(`❌ Превышен лимит устройств. Доступно: ${this.currentDevices}`, 'error');
+            return false;
+        }
+
+        try {
+            // Используем новый метод копирования ссылки
+            return await this.copyConfigLink();
+        } catch (error) {
+            console.error('Failed to download config:', error);
+            Helpers.showNotification('❌ Ошибка при копировании конфига', 'error');
+            return false;
+        }
+    }
+
+    // Создание подписки
+    async createSubscription(months, devices, paymentMethod = 'card') {
+        const price = this.calculatePrice(months, devices);
+        
+        // Показываем процесс оплаты
+        Helpers.showNotification('Инициализация платежа...', 'info');
+        
+        try {
+            const paymentResult = await this.paymentProcessor.processPayment({
+                amount: price,
+                currency: 'RUB',
+                description: `Подписка Silence Proxy на ${months} месяцев`,
+                paymentMethod: paymentMethod
+            });
+
+            if (paymentResult.success) {
+                await this.processSuccessfulPayment(months, devices, paymentResult);
+                return true;
+            } else {
+                Helpers.showNotification('Ошибка оплаты: ' + paymentResult.error, 'error');
+                return false;
+            }
+        } catch (error) {
+            console.error('Payment error:', error);
+            Helpers.showNotification('Ошибка при обработке платежа', 'error');
+            return false;
+        }
+    }
+
+    async processSuccessfulPayment(months, devices, paymentResult) {
+    // Обновляем конфиг пользователя
         this.currentDevices = devices;
         
-        // Обновляем UI на главной странице
-        const subscriptionInfo = document.querySelector('.subscription-info');
-        if (subscriptionInfo) {
-            const devicesElement = subscriptionInfo.querySelector('.info-item:first-child .value');
-            if (devicesElement) {
-                devicesElement.textContent = `${devices}/${this.maxDevices}`;
-            }
-        }
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setMonth(endDate.getMonth() + months);
         
-        return this.currentDevices;
-    }
-
-    getSubscriptionData() {
-        return {
-            active: true,
-            endDate: '2024-12-31',
-            devices: this.currentDevices,
-            maxDevices: this.maxDevices,
-            trafficUsed: '145.7 ГБ'
+        this.userConfig.devices = devices;
+        this.userConfig.subscriptionEnd = endDate.toISOString().split('T')[0];
+        this.userConfig.subscriptionStart = startDate.toISOString().split('T')[0];
+        this.userConfig.active = true;
+        this.userConfig.lastPayment = {
+            amount: paymentResult.amount,
+            date: new Date().toISOString(),
+            method: paymentResult.method,
+            months: months
         };
-    }
 
-    processPayment() {
-        // В реальном приложении здесь была бы интеграция с платежной системой
-        Helpers.showNotification('Платеж успешно обработан! Подписка активирована.', 'success');
-        
+        this.saveUserConfig();
+
+        // Генерируем новый мастер-конфиг с новым количеством устройств
+        await this.generateMasterConfig();
+
+        // Сохраняем транзакцию
+        await this.saveTransaction({
+            type: 'subscription',
+            amount: paymentResult.amount,
+            months: months,
+            devices: devices,
+            description: `Подписка на ${months} месяцев, ${devices} устройств`,
+            status: 'completed'
+        });
+
+        // Обновляем UI
+        this.updateSubscriptionUI();
+
+        Helpers.showNotification(`✅ Подписка активирована на ${months} месяцев! Доступно устройств: ${devices}`, 'success');
+
         // Закрываем страницу оплаты
         if (window.app && window.app.pageManager) {
             window.app.pageManager.closeCurrent();
         }
-        
-        // Обновляем статус подписки
-        this.updateSubscriptionStatus(true);
-    }
+    }   
 
-    async downloadConfig() {
+    // Генерация мастер-конфига для всех устройств
+    async generateMasterConfig() {
+        if (!window.app.vpnManager) {
+            console.error('VPN Manager not available');
+            return null;
+        }
+
         try {
-            // Формируем VLESS-ссылку для быстрого подключения
-            const vlessLink = this.generateVlessLink();
-            
-            // Копируем в буфер обмена
-            await Helpers.copyToClipboard(vlessLink);
-            Helpers.showNotification('VLESS-ссылка скопирована в буфер обмена', 'success');
-            
-            // Логируем действие
-            if (window.app && window.app.database && window.app.database.db) {
-                await window.app.database.logEvent('config_downloaded', window.app.userData.id);
-            }
-            
-            return true;
+            const masterConfig = await window.app.vpnManager.generateMasterConfig(
+                this.userConfig.userId,
+                this.currentDevices,
+                'vless'
+            );
+
+            // Сохраняем мастер-конфиг
+            localStorage.setItem('silenceProxy_masterConfig', JSON.stringify(masterConfig));
+
+            // Логируем генерацию конфига
+            this.logEvent('config_generated', { 
+                devices: this.currentDevices,
+                protocol: 'vless'
+            });
+
+            return masterConfig;
         } catch (error) {
-            console.error('Failed to download config:', error);
-            Helpers.showNotification('Ошибка при копировании конфига', 'error');
-            return false;
+            console.error('Failed to generate master config:', error);
+            this.logEvent('config_generation_failed', { error: error.message });
+            return null;
         }
     }
 
-    generateVlessLink() {
-        const { ip, port, uuid, publicKey, shortId, serverName } = this.serverConfig;
+    // Получение ключа-ссылки для импорта
+    async getConfigLink(protocol = 'vless') {
+        if (!this.userConfig.active) {
+            Helpers.showNotification('❌ Подписка не активна', 'error');
+            return null;
+        }
+
+        // Проверяем срок подписки
+        if (!this.checkSubscriptionStatus()) {
+            Helpers.showNotification('❌ Срок подписки истек', 'error');
+            return null;
+        }
+
+        try {
+            // Получаем или генерируем мастер-конфиг
+            let masterConfig = JSON.parse(localStorage.getItem('silenceProxy_masterConfig') || 'null');
+
+            if (!masterConfig || !window.app.vpnManager.isConfigValid(masterConfig)) {
+                masterConfig = await this.generateMasterConfig();
+            }
+
+            if (!masterConfig) {
+                Helpers.showNotification('❌ Ошибка генерации конфига', 'error');
+                return null;
+            }
+
+            // Обновляем использование конфига
+            window.app.vpnManager.updateConfigUsage(this.userConfig.userId);
+
+            // Генерируем правильную ссылку для выбранного протокола
+            const configLink = window.app.vpnManager.generateVlessLink(masterConfig, protocol);
+
+            return configLink;
+        } catch (error) {
+            console.error('Failed to generate config link:', error);
+            Helpers.showNotification('❌ Ошибка генерации ключа', 'error');
+            return null;
+        }
+    }
+
+    // Генерация правильной vless ссылки
+    generateVlessLink(config) {
+        // Формируем vless ссылку в правильном формате для Happ
+        const uuid = config.id;
+        const server = config.address;
+        const port = config.port;
+        const flow = config.flow;
+        const encryption = config.encryption;
+        const type = config.transport;
+        const security = config.tls;
+        const sni = config.sni;
+        const fp = config.fp;
+        const publicKey = config['reality-opts']['public-key'];
+        const shortId = config['reality-opts']['short-id'];
         
-        // Формируем VLESS-ссылку в стандартном формате
-        const vlessLink = `vless://${uuid}@${ip}:${port}?encryption=none&flow=xtls-rprx-vision&security=reality&sni=${serverName}&fp=chrome&pbk=${publicKey}&sid=${shortId}&type=tcp&headerType=none#SilenceProxy`;
+        // Формат vless ссылки для Happ
+        const vlessLink = `vless://${uuid}@${server}:${port}?flow=${flow}&encryption=${encryption}&type=${type}&security=${security}&sni=${sni}&fp=${fp}&pbk=${publicKey}&sid=${shortId}#Silence+Proxy`;
         
         return vlessLink;
     }
 
-    generateJsonConfig() {
-        const { ip, port, uuid, publicKey, shortId, serverName } = this.serverConfig;
+    // Копирование ключа-ссылки
+    async copyConfigLink(protocol = 'vless') {
+        const configLink = await this.getConfigLink(protocol);
         
-        // Формируем JSON конфиг для приложений
-        const jsonConfig = {
-            "server": ip,
-            "server_port": port,
-            "uuid": uuid,
-            "flow": "xtls-rprx-vision",
-            "packet_encoding": "xudp",
-            "transport": {
-                "type": "reality",
-                "server_name": serverName,
-                "public_key": publicKey,
-                "short_id": shortId,
-                "fingerprint": "chrome"
-            }
-        };
-        
-        return JSON.stringify(jsonConfig, null, 2);
-    }
+        if (configLink) {
+            const success = await Helpers.copyToClipboard(configLink);
+            if (success) {
+                Helpers.showNotification('✅ Ключ-ссылка скопирована! Откройте Happ и вставьте ссылку.', 'success', 5000);
 
-    updateSubscriptionStatus(isActive) {
-        // Обновляем статус подписки в UI
-        const statusBadge = document.querySelector('.status-badge');
-        const renewBtn = document.getElementById('renew-btn');
-        
-        if (statusBadge && isActive) {
-            statusBadge.textContent = 'Активна';
-            statusBadge.className = 'status-badge active';
-        }
-        
-        if (renewBtn && isActive) {
-            renewBtn.textContent = 'Продлить подписку';
-        }
-        
-        // Обновляем дату окончания
-        const endDate = new Date();
-        endDate.setMonth(endDate.getMonth() + 1); // +1 месяц
-        
-        const endDateElement = document.querySelector('.subscription-info .info-item:nth-child(2) .value');
-        if (endDateElement) {
-            endDateElement.textContent = endDate.toLocaleDateString('ru-RU');
-        }
-        
-        // Сохраняем в базу данных если доступна
-        this.saveSubscriptionToDatabase(isActive, endDate);
-    }
-
-    async saveSubscriptionToDatabase(isActive, endDate) {
-        try {
-            if (window.app && window.app.database && window.app.database.db) {
-                await window.app.database.saveSubscription({
-                    userId: window.app.userData.id,
-                    active: isActive,
-                    endDate: endDate.toISOString(),
+                // Логируем действие
+                this.logEvent('config_copied', { 
                     devices: this.currentDevices,
-                    maxDevices: this.maxDevices,
-                    trafficUsed: '0 ГБ'
+                    daysRemaining: this.getDaysRemaining(),
+                    protocol: protocol
                 });
-                
-                // Сохраняем транзакцию
-                await window.app.database.saveTransaction({
-                    userId: window.app.userData.id,
-                    description: 'Активация подписки',
-                    amount: this.calculatePrice(1, this.currentDevices),
-                    type: 'subscription',
-                    status: 'completed'
-                });
+            }
+            return success;
+        }
+        return false;
+    }
+
+    getServerInfo() {
+        if (!window.app.vpnManager) return null;
+        
+        const server = window.app.vpnManager.getBestServer();
+        const stats = window.app.vpnManager.getServerStats(server.id);
+        
+        return {
+            server: server,
+            stats: stats,
+            overall: window.app.vpnManager.getOverallStats()
+        };
+    }
+
+    // Процесс оплаты
+    async processPayment() {
+        const selectedPeriod = document.querySelector('.period-option.active');
+        if (!selectedPeriod) {
+            Helpers.showNotification('❌ Выберите период подписки', 'warning');
+            return;
+        }
+
+        const months = parseInt(selectedPeriod.dataset.months);
+        const devices = this.currentDevices;
+        const totalPrice = this.calculatePrice(months, devices);
+
+        try {
+            const success = await this.createSubscription(months, devices, 'card');
+            
+            if (success) {
+                // Уже обработано в processSuccessfulPayment
             }
         } catch (error) {
-            console.warn('Failed to save subscription to database:', error);
+            console.error('Payment processing error:', error);
+            Helpers.showNotification('❌ Ошибка при обработке платежа', 'error');
         }
     }
 
-    // Метод для проверки статуса подписки
+    // Проверка статуса подписки
     checkSubscriptionStatus() {
-        const subscription = this.getSubscriptionData();
-        const endDate = new Date(subscription.endDate);
-        const now = new Date();
+        if (!this.userConfig.active) return false;
         
-        if (endDate < now) {
-            // Подписка истекла
-            this.updateSubscriptionStatus(false);
+        const endDate = new Date(this.userConfig.subscriptionEnd);
+        const today = new Date();
+        
+        if (endDate < today) {
+            this.userConfig.active = false;
+            this.saveUserConfig();
+            this.updateSubscriptionUI();
             return false;
         }
         
-        return subscription.active;
+        return true;
     }
 
-    // Метод для получения информации о трафике
-    getTrafficInfo() {
+    // Получение оставшихся дней
+    getDaysRemaining() {
+        if (!this.userConfig.active) return 0;
+        
+        const endDate = new Date(this.userConfig.subscriptionEnd);
+        const today = new Date();
+        const diffTime = endDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        return Math.max(0, diffDays);
+    }
+
+    // Получение данных подписки
+    getSubscriptionData() {
+        const trafficUsed = this.getTrafficUsage();
+        const referralInfo = this.getReferralInfo();
+        const daysRemaining = this.getDaysRemaining();
+        const isActive = this.checkSubscriptionStatus();
+
         return {
-            used: '145.7 ГБ',
-            total: 'Неограниченно',
-            percentage: 0
+            active: isActive,
+            endDate: this.userConfig.subscriptionEnd,
+            startDate: this.userConfig.subscriptionStart,
+            daysRemaining: daysRemaining,
+            devices: this.currentDevices,
+            maxDevices: this.maxDevices,
+            trafficUsed: trafficUsed,
+            userId: this.userConfig.userId,
+            referral: referralInfo
         };
     }
 
-    // Метод для сброса статистики трафика
-    resetTrafficStats() {
-        // В реальном приложении здесь был бы сброс статистики на сервере
-        Helpers.showNotification('Статистика трафика сброшена', 'info');
+    // Расчет цены
+    calculatePrice(months, devices, discount = 0) {
+        const basePrice = this.basePrice * months;
+        const additionalPrice = Math.max(0, devices - 1) * this.additionalDevicePrice * months;
+        const total = basePrice + additionalPrice;
+        return Math.round(total * (1 - discount));
+    }
+
+    // Обновление количества устройств
+    updateDevices(devices) {
+        this.currentDevices = Math.min(devices, this.maxDevices);
+        this.userConfig.devices = this.currentDevices;
+        this.saveUserConfig();
         
-        // Обновляем UI
-        const trafficElement = document.querySelector('.subscription-info .info-item:nth-child(3) .value');
-        if (trafficElement) {
-            trafficElement.textContent = '0 ГБ';
+        // Перегенерируем конфиг с новым количеством устройств
+        this.generateMasterConfig();
+        
+        this.updateSubscriptionUI();
+        return this.currentDevices;
+    }
+
+    updateSubscriptionUI() {
+        if (window.app && window.app.renderMain) {
+            window.app.renderMain();
         }
     }
 
-    // Метод для применения промокода
-    applyPromoCode(promoCode) {
-        const validCodes = {
-            'WELCOME10': 0.1, // 10% скидка
-            'FRIEND20': 0.2,  // 20% скидка
-            'SUMMER15': 0.15  // 15% скидка
+    // Вспомогательные методы
+    calculateEndDate(months) {
+        const date = new Date();
+        date.setMonth(date.getMonth() + months);
+        return date.toISOString().split('T')[0];
+    }
+
+    generateReferralCode() {
+        return 'ref_' + Math.random().toString(36).substr(2, 8);
+    }
+
+    saveUserConfig() {
+        localStorage.setItem('silenceProxy_userConfig', JSON.stringify(this.userConfig));
+    }
+
+    async saveTransaction(transactionData) {
+        const transactions = JSON.parse(localStorage.getItem('silenceProxy_transactions') || '[]');
+        transactions.push({
+            id: 'tx_' + Math.random().toString(36).substr(2, 9),
+            ...transactionData,
+            date: new Date().toISOString(),
+            userId: this.userConfig.userId
+        });
+        localStorage.setItem('silenceProxy_transactions', JSON.stringify(transactions));
+    }
+
+    getTrafficUsage() {
+        const usage = localStorage.getItem('silenceProxy_trafficUsage') || '0';
+        return `${(parseInt(usage) / 1024).toFixed(1)} ГБ`;
+    }
+
+    logEvent(event, metadata = {}) {
+        const log = {
+            event,
+            userId: this.userConfig.userId,
+            timestamp: new Date().toISOString(),
+            metadata
         };
         
-        const discount = validCodes[promoCode.toUpperCase()];
-        
-        if (discount) {
-            const originalPrice = this.calculatePrice(1, this.currentDevices);
-            const discountedPrice = Math.round(originalPrice * (1 - discount));
-            
-            Helpers.showNotification(`Промокод применен! Скидка ${discount * 100}%`, 'success');
-            return discountedPrice;
-        }
-        
-        Helpers.showNotification('Неверный промокод', 'error');
-        return null;
+        const events = JSON.parse(localStorage.getItem('silenceProxy_events') || '[]');
+        events.push(log);
+        localStorage.setItem('silenceProxy_events', JSON.stringify(events.slice(-100)));
     }
 
-    // Метод для получения истории платежей
-    getPaymentHistory() {
-        // В реальном приложении здесь был бы запрос к API
-        return [
-            {
-                id: 1,
-                date: '2024-01-15',
-                description: 'Продление подписки',
-                amount: 300,
-                status: 'completed'
-            },
-            {
-                id: 2,
-                date: '2024-01-10',
-                description: 'Доп. устройство',
-                amount: 50,
-                status: 'completed'
-            },
-            {
-                id: 3,
-                date: '2023-12-20',
-                description: 'Продление подписки',
-                amount: 100,
-                status: 'completed'
-            }
-        ];
-    }
-
-    // Метод для обновления данных сервера (для админки)
-    updateServerConfig(newConfig) {
-        this.serverConfig = { ...this.serverConfig, ...newConfig };
+    // Реферальная программа
+    getReferralInfo() {
+        const referrals = JSON.parse(localStorage.getItem('silenceProxy_referrals') || '[]');
+        const userReferrals = referrals.filter(ref => ref.referrerId === this.userConfig.userId);
         
-        // Сохраняем в локальное хранилище
-        if (typeof Storage !== 'undefined') {
-            localStorage.setItem('silenceProxy_serverConfig', JSON.stringify(this.serverConfig));
-        }
-        
-        Helpers.showNotification('Настройки сервера обновлены', 'success');
-    }
-
-    // Метод для загрузки конфига из локального хранилища
-    loadServerConfig() {
-        if (typeof Storage !== 'undefined') {
-            const savedConfig = localStorage.getItem('silenceProxy_serverConfig');
-            if (savedConfig) {
-                this.serverConfig = { ...this.serverConfig, ...JSON.parse(savedConfig) };
-            }
-        }
+        return {
+            code: this.userConfig.referralCode,
+            link: `https://t.me/silenceproxy?start=ref_${this.userConfig.userId}`,
+            totalReferrals: userReferrals.length,
+            earned: userReferrals.length * 50,
+            pending: userReferrals.filter(ref => !ref.used).length
+        };
     }
 }
-
-// Инициализация при загрузке
-document.addEventListener('DOMContentLoaded', function() {
-    // Автоматически загружаем конфиг сервера при инициализации
-    if (window.app && window.app.subscriptionManager) {
-        window.app.subscriptionManager.loadServerConfig();
-    }
-});

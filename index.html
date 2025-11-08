@@ -37,9 +37,11 @@
     <!-- JS в правильном порядке -->
     <script src="js/utils/helpers.js"></script>
     <script src="js/utils/database.js"></script>
+    <script src="js/components/paymentProcessor.js"></script>
+    <script src="js/components/vpnManager.js"></script> <!-- VPN Manager перед Subscription Manager -->
+    <script src="js/components/subscriptionManager.js"></script>
     <script src="js/components/modalManager.js"></script>
     <script src="js/components/pageManager.js"></script>
-    <script src="js/components/subscriptionManager.js"></script>
     <script src="js/components/deviceManager.js"></script>
     <script src="js/app.js"></script>
 
@@ -47,6 +49,20 @@
         // Глобальный обработчик ошибок
         window.addEventListener('error', function(e) {
             console.error('Global error:', e.error);
+            
+            // Показываем пользователю сообщение об ошибке
+            if (e.error && e.error.message && e.error.message.includes('PaymentProcessor')) {
+                const fallback = document.getElementById('fallback-message');
+                if (fallback) {
+                    fallback.innerHTML = `
+                        <div>
+                            <h1 style="margin-bottom: 1rem; background: linear-gradient(135deg, #FDECEF, #745C97); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Silence Proxy</h1>
+                            <p>Ошибка загрузки платежной системы. Пожалуйста, обновите страницу.</p>
+                            <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #745C97; color: white; border: none; border-radius: 8px; cursor: pointer;">Обновить</button>
+                        </div>
+                    `;
+                }
+            }
         });
 
         // Скрываем fallback сообщение когда приложение загружено
