@@ -2,8 +2,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent; /* Отключаем выделение на мобилках */
-    -webkit-user-select: none; /* Отключаем выделение текста */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
@@ -23,12 +23,27 @@ body {
     color: var(--secondary);
     min-height: 100vh;
     line-height: 1.6;
+    /* Обеспечиваем что фон покрывает всю высоту */
+    background-attachment: fixed;
+}
+
+/* Убедимся что градиент покрывает всю страницу */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+    z-index: -1;
 }
 
 #app {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    position: relative;
 }
 
 .main {
@@ -37,6 +52,8 @@ body {
     max-width: 500px;
     margin: 0 auto;
     width: 100%;
+    position: relative;
+    z-index: 1;
 }
 
 /* Новая структура кнопок */

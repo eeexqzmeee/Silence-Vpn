@@ -8,10 +8,11 @@
     z-index: var(--z-page);
     overflow-y: auto;
     animation: pageSlideIn var(--transition-normal) forwards;
-    /* Разрешаем клики только на самой странице */
+    /* Убираем псевдоэлемент с затемнением */
     pointer-events: auto;
+    /* Обеспечиваем полное покрытие фона */
+    min-height: 100vh;
 }
-
 .page::before {
     content: '';
     position: fixed;
@@ -21,6 +22,7 @@
     bottom: 0;
     background: rgba(15, 15, 18, 0.8);
     z-index: -1;
+    display: none;
 }
 
 .page.closing {
@@ -34,10 +36,12 @@
     min-height: 100vh;
     /* Предотвращаем закрытие при клике на контент */
     pointer-events: auto;
+    /* Обеспечиваем правильный фон */
+    background: transparent;
 }
 
 .back-btn {
-    position: absolute;
+    position: fixed; /* Меняем на fixed чтобы кнопка всегда была видна */
     top: var(--space-lg);
     left: var(--space-lg);
     width: 44px;
@@ -54,6 +58,7 @@
     z-index: 1;
     /* Предотвращаем закрытие при клике на кнопку */
     pointer-events: auto;
+    backdrop-filter: blur(20px);
 }
 
 .back-btn:hover {
